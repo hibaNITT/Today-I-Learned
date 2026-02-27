@@ -1,0 +1,7 @@
+1.login
+2.per account , per button one vote
+3.page to view your posts
+4. to edit and delete your post
+5. sort the posts according to the creation date
+6. display the username on each post
+
