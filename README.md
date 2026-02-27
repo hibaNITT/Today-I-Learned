@@ -82,4 +82,3 @@ Access the deployed version here:
 
 
 
-If you want, I can also generate a version with badges (Netlify deploy status, license, tech stack icons) to make the README look even more polished.
