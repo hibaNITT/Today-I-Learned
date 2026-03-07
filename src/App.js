@@ -63,6 +63,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectCat, setSelectCat] = useState("all");
   const [session, setSession] = useState(null);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   //supabase authentication
 
@@ -162,6 +163,8 @@ function App() {
         setShowForm={setShowForm}
         session={session}
         signOut={signOut}
+        showProfileDropdown={showProfileDropdown}
+        setShowProfileDropdown={setShowProfileDropdown}
       />
       {/* <Counter /> */}
       {/* 2.use state variable */}
@@ -186,7 +189,14 @@ function Loader() {
 
 //usage of prompts
 
-function Header({ showForm, setShowForm, session, signOut }) {
+function Header({
+  showForm,
+  setShowForm,
+  session,
+  signOut,
+  showProfileDropdown,
+  setShowProfileDropdown,
+}) {
   const appTitle = "Today I Learned";
   const displayName =
     session?.user?.user_metadata?.username ||
@@ -200,7 +210,7 @@ function Header({ showForm, setShowForm, session, signOut }) {
       </div>
 
       <>
-        <span>{displayName}</span>
+        <h2>Username : {displayName}</h2>
         <button className="btn btn-large" onClick={signOut}>
           Logout
         </button>
@@ -213,7 +223,17 @@ function Header({ showForm, setShowForm, session, signOut }) {
         {showForm ? "Close" : "Share a fact"}
       </button>
 
-      <button className="btn btn-large btn-shareFact">Profile</button>
+      <button
+        className="btn btn-large btn-shareFact"
+        onClick={() => setShowProfileDropdown((v) => !v)}
+      >
+        Profile
+      </button>
+      {showProfileDropdown ? (
+        <div className="profile-dropdown">
+          <p>Username : {displayName}</p>
+        </div>
+      ) : null}
     </header>
   );
 }
@@ -431,21 +451,39 @@ function Fact({ fact, setFacts }) {
   async function handleVote(columnName) {
     setIsUpdating(true);
 
-    const { data: updatedFact, error } = await supabase
-      .from("Facts")
-      .update({ [columnName]: fact[columnName] + 1 })
-      .eq("id", fact.id)
-      .select();
+    const { data: voteResult, error } = await supabase.rpc("cast_vote", {
+      _fact_id: fact.id,
+      _vote_type: columnName,
+    });
     setIsUpdating(false);
 
-    if (!error && updatedFact?.length)
-      setFacts((facts) =>
-        facts.map((f) => (f.id === fact.id ? updatedFact[0] : f)),
-      );
-    else {
-      alert(error?.message || "Vote update failed");
+    if (error) {
+      if (/cast_vote/i.test(error.message)) {
+        alert(
+          "Vote system is not set up yet. Run the SQL setup for cast_vote in Supabase.",
+        );
+      } else {
+        alert(error.message || "Vote update failed");
+      }
       console.error("Vote update error:", error);
+      return;
     }
+
+    if (voteResult === "already_voted") {
+      alert("You already voted on this button.");
+      return;
+    }
+
+    if (voteResult !== "ok") {
+      alert("Unexpected vote response. Please try again.");
+      return;
+    }
+
+    setFacts((facts) =>
+      facts.map((f) =>
+        f.id === fact.id ? { ...f, [columnName]: f[columnName] + 1 } : f,
+      ),
+    );
   }
 
   const category = CATEGORIES.find((cat) => cat.name === fact.category);

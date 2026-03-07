@@ -39,6 +39,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
 }
 
 .main {
@@ -300,4 +301,15 @@ ul {
   .fact {
     padding: 12px 16px;
   }
+}
+.profile-dropdown {
+  position: absolute;
+  top: 78px;
+  right: 24px;
+  background: #1f2937;
+  color: #fff;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 10px 14px;
+  z-index: 20;
 }
