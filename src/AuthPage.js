@@ -16,12 +16,36 @@ export default function AuthPage() {
     setIsSubmitting(true);
     setMessage("");
 
-    //if signed up you can just signin with password
-    const action = isSignUp
-      ? supabase.auth.signUp({ email, password })
-      : supabase.auth.signInWithPassword({ email, password });
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username, // save custom username
+          },
+        },
+      });
 
-    const { error } = await action;
+      setIsSubmitting(false);
+
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+
+      setPassword("");
+      setIsSignUp(false);
+      setMessage(
+        "Signup successful. Check your email to verify your account!!!!! Press the link , then login using those credentials.",
+      );
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     setIsSubmitting(false);
 
     if (error) {
@@ -29,12 +53,7 @@ export default function AuthPage() {
       return;
     }
 
-    //setmessage is to give text
-    if (isSignUp) {
-      setMessage("Signup successful. Check email if confirmation is enabled.");
-    } else {
-      setMessage("Login successful.");
-    }
+    setMessage("Login successful.");
   }
 
   //standard function
@@ -49,24 +68,25 @@ export default function AuthPage() {
 
   return (
     <>
-      <section className="username">
-        {"Enter a cool username. This name will be displayed to other"}
-        <form className="usernameForm">
-          <input
-            type="text"
-            placeholder="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            disabled={isSubmitting}
-          />
-        </form>
-      </section>
       <section className="auth-card">
         {/* checking if we are signed in */}
         <h2>{isSignUp ? "Create account" : "Login"}</h2>
 
         <form onSubmit={handleEmailAuth} className="auth-form">
+          {isSignUp && (
+            <section className="usernameForm">
+              {"Enter a cool username. This name will be displayed to other"}
+              <input
+                type="text"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                minLength={3}
+                disabled={isSubmitting}
+              />
+            </section>
+          )}
           <input
             type="email"
             placeholder="Email"

@@ -115,17 +115,32 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  async function signInWithGoogle() {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin },
-    });
+  useEffect(
+    function () {
+      async function ensureUsername() {
+        if (!session?.user) return;
 
-    if (error) {
-      alert(error.message);
-      console.error("Google sign-in error:", error);
-    }
-  }
+        const metadata = session.user.user_metadata || {};
+        if (metadata.username) return;
+
+        const fallbackUsername =
+          metadata.full_name || session.user.email?.split("@")[0];
+
+        if (!fallbackUsername) return;
+
+        const { error } = await supabase.auth.updateUser({
+          data: { username: fallbackUsername },
+        });
+
+        if (error) {
+          console.error("Username update error:", error);
+        }
+      }
+
+      ensureUsername();
+    },
+    [session],
+  );
 
   async function signOut() {
     const { error } = await supabase.auth.signOut();
@@ -146,7 +161,6 @@ function App() {
         showForm={showForm}
         setShowForm={setShowForm}
         session={session}
-        signInWithGoogle={signInWithGoogle}
         signOut={signOut}
       />
       {/* <Counter /> */}
@@ -172,8 +186,12 @@ function Loader() {
 
 //usage of prompts
 
-function Header({ showForm, setShowForm, session, signInWithGoogle, signOut }) {
+function Header({ showForm, setShowForm, session, signOut }) {
   const appTitle = "Today I Learned";
+  const displayName =
+    session?.user?.user_metadata?.username ||
+    session?.user?.user_metadata?.full_name ||
+    session?.user?.email;
   return (
     <header className="header">
       <div className="logo">
@@ -182,7 +200,7 @@ function Header({ showForm, setShowForm, session, signInWithGoogle, signOut }) {
       </div>
 
       <>
-        <span>{session.username}</span>
+        <span>{displayName}</span>
         <button className="btn btn-large" onClick={signOut}>
           Logout
         </button>
