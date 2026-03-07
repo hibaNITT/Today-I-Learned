@@ -1,8 +1,10 @@
 //importing style.cc
 
+import "./AuthPageStyles.css";
 import "./style.css";
 import { useEffect, useState } from "react";
 import supabase from "./supabase";
+import AuthPage from "./AuthPage";
 
 //app component will have all the other components
 //components
@@ -60,6 +62,9 @@ function App() {
   const [facts, setFacts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectCat, setSelectCat] = useState("all");
+  const [session, setSession] = useState(null);
+
+  //supabase authentication
 
   //initial state is an empty array
   //once the page loads setfacts(facts)
@@ -96,19 +101,59 @@ function App() {
     [selectCat],
   );
 
+  useEffect(function () {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function signInWithGoogle() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+
+    if (error) {
+      alert(error.message);
+      console.error("Google sign-in error:", error);
+    }
+  }
+
+  async function signOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      alert(error.message);
+      console.error("Sign-out error:", error);
+    }
+  }
+
+  //returning authpage
+
+  if (!session) return <AuthPage />;
+
   return (
     <>
       {/* Header */}
-
-      <Header showForm={showForm} setShowForm={setShowForm} />
-
+      <Header
+        showForm={showForm}
+        setShowForm={setShowForm}
+        session={session}
+        signInWithGoogle={signInWithGoogle}
+        signOut={signOut}
+      />
       {/* <Counter /> */}
-
       {/* 2.use state variable */}
       {showForm ? (
         <NewFactForm setFacts={setFacts} setShowForm={setShowForm} />
       ) : null}
-
       <main className="main">
         <CategoryFilter selectCat={selectCat} setSelectCat={setSelectCat} />
         {isLoading ? (
@@ -127,7 +172,7 @@ function Loader() {
 
 //usage of prompts
 
-function Header({ showForm, setShowForm }) {
+function Header({ showForm, setShowForm, session, signInWithGoogle, signOut }) {
   const appTitle = "Today I Learned";
   return (
     <header className="header">
@@ -136,12 +181,21 @@ function Header({ showForm, setShowForm }) {
         <h1>{appTitle}</h1>
       </div>
 
+      <>
+        <span>{session.username}</span>
+        <button className="btn btn-large" onClick={signOut}>
+          Logout
+        </button>
+      </>
+
       <button
         className="btn btn-large btn-shareFact"
         onClick={() => setShowForm((s) => !s)}
       >
         {showForm ? "Close" : "Share a fact"}
       </button>
+
+      <button className="btn btn-large btn-shareFact">Profile</button>
     </header>
   );
 }
