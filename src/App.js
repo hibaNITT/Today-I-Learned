@@ -451,37 +451,34 @@ function Fact({ fact, setFacts }) {
   async function handleVote(columnName) {
     setIsUpdating(true);
 
-    const { data: voteResult, error } = await supabase.rpc("cast_vote", {
-      _fact_id: fact.id,
-      _vote_type: columnName,
-    });
+    const nextVoteCount = (fact[columnName] ?? 0) + 1;
+    const { data: updatedFact, error } = await supabase
+      .from("Facts")
+      .update({ [columnName]: nextVoteCount })
+      .eq("id", fact.id)
+      .select()
+      .single();
+
     setIsUpdating(false);
 
     if (error) {
-      if (/cast_vote/i.test(error.message)) {
-        alert(
-          "Vote system is not set up yet. Run the SQL setup for cast_vote in Supabase.",
-        );
-      } else {
-        alert(error.message || "Vote update failed");
-      }
+      alert(error.message || "Vote update failed");
       console.error("Vote update error:", error);
-      return;
-    }
-
-    if (voteResult === "already_voted") {
-      alert("You already voted on this button.");
-      return;
-    }
-
-    if (voteResult !== "ok") {
-      alert("Unexpected vote response. Please try again.");
       return;
     }
 
     setFacts((facts) =>
       facts.map((f) =>
-        f.id === fact.id ? { ...f, [columnName]: f[columnName] + 1 } : f,
+        f.id === fact.id
+          ? {
+              ...f,
+              votesInteresting:
+                updatedFact?.votesInteresting ?? f.votesInteresting,
+              votesMindblowing:
+                updatedFact?.votesMindblowing ?? f.votesMindblowing,
+              votesFalse: updatedFact?.votesFalse ?? f.votesFalse,
+            }
+          : f,
       ),
     );
   }
