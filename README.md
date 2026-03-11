@@ -74,7 +74,7 @@ npm run build
 
 ##  Live Demo
 Access the deployed version here:  
-**https://todayilearned-hiba.netlify.app/**
+**https://todayilearnedyayy.netlify.app/**
 
 ---
 
