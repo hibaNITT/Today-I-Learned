@@ -1,11 +1,7 @@
-A clean README with your live link included strengthens the project and makes it easy for anyone to explore it. This version keeps things structured, readable, and aligned with a typical JavaScript/React-style project like yours.
 
----
-
-## README.md (updated with your Netlify link)
-
-```markdown
 # Today I Learned 🌱
+
+Developed as part of my web development practice.
 
 An interactive web application for collecting and sharing short, interesting facts.  
 Designed with a clean JavaScript project structure and deployed for easy access.
