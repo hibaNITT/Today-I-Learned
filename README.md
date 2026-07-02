@@ -1,5 +1,5 @@
 
-# Today I Learned 🌱
+# Today I Learned 
 
 Developed as part of my web development practice.
 
@@ -23,8 +23,9 @@ The project uses a familiar folder layout (`src`, `public`, `build`) and Node.js
 ---
 
 ## Tech Stack
-- **Frontend:** JavaScript, HTML, CSS (React if used in your project)
-- **Tooling:** Node.js, npm
+- **Frontend:** JavaScript, HTML, CSS , React
+- **Tooling:** Node.js
+- **Bakend** Supabase
 - **Deployment:** Netlify
 
 ---
